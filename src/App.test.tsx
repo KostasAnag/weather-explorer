@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import App from './App'
@@ -47,11 +48,29 @@ function fakeApi(temp: number, code: number) {
   })
 }
 
+function renderApp() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(
+    <QueryClientProvider client={client}>
+      <App />
+    </QueryClientProvider>,
+  )
+}
+
+const clickMap = (lng: number, lat: number) =>
+  act(() => handlers.click({ lngLat: { lng, lat }, point: { x: 1, y: 1 } }))
+
+const rome = {
+  sourceLayer: 'place',
+  properties: { name: 'Rome', class: 'city' },
+  geometry: { type: 'Point', coordinates: [12.4964, 41.9028] },
+}
+
 describe('App: click map -> fetch -> display weather', () => {
   it('starts empty, then shows weather after a map click', async () => {
     fakeApi(9.5, 63)
     features = []
-    render(<App />)
+    renderApp()
     expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
     expect(screen.getByText(/click on any location to view the weather/i)).toBeInTheDocument()
     expect(screen.getByText(/select a location/i)).toBeInTheDocument()
@@ -76,7 +95,7 @@ describe('App: click map -> fetch -> display weather', () => {
       properties: { name: 'Rome', class: 'city' },
       geometry: { type: 'Point', coordinates: [12.4964, 41.9028] },
     }]
-    render(<App />)
+    renderApp()
 
     handlers.click({ lngLat: { lng: 12.5, lat: 41.9 }, point: { x: 1, y: 1 } })
 
@@ -97,7 +116,7 @@ describe('App: click map -> fetch -> display weather', () => {
           ok({ coords: { latitude: 51.5074, longitude: -0.1278 } } as GeolocationPosition),
       },
     })
-    render(<App />)
+    renderApp()
 
     await userEvent.click(screen.getByRole('button', { name: /zoom to my location/i }))
 
@@ -105,5 +124,76 @@ describe('App: click map -> fetch -> display weather', () => {
     expect(axios.get).not.toHaveBeenCalled()
     expect(screen.getByText(/select a location/i)).toBeInTheDocument()
     vi.unstubAllGlobals()
+  })
+})
+
+describe('App: saved locations', () => {
+  async function selectAndSaveRome() {
+    features = [rome]
+    clickMap(12.5, 41.9)
+    await screen.findByRole('heading', { name: 'Rome' })
+    await userEvent.click(screen.getByRole('button', { name: 'Save location' }))
+  }
+
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset()
+    flyTo.mockClear()
+    fakeApi(10, 0)
+  })
+
+  it('starts with an empty-state message', () => {
+    renderApp()
+    expect(screen.getByText(/no saved locations yet/i)).toBeInTheDocument()
+  })
+
+  it('saves the selected place, shows it in the list and stores only location data', async () => {
+    renderApp()
+    await selectAndSaveRome()
+
+    const list = screen.getByRole('list', { name: /saved locations/i })
+    expect(within(list).getByRole('button', { name: 'Rome' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /saved/i })).toBeDisabled()
+    expect(JSON.parse(localStorage.getItem('weather-explorer:saved-locations')!)).toEqual([
+      { id: '41.9028,12.4964', name: 'Rome', latitude: 41.9028, longitude: 12.4964 },
+    ])
+  })
+
+  it('restores saved locations after a reload', async () => {
+    const first = renderApp()
+    await selectAndSaveRome()
+    first.unmount()
+
+    renderApp()
+    expect(screen.getByRole('button', { name: 'Rome' })).toBeInTheDocument()
+  })
+
+  it('removes a saved location', async () => {
+    renderApp()
+    await selectAndSaveRome()
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Rome' }))
+    expect(screen.getByText(/no saved locations yet/i)).toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('weather-explorer:saved-locations')!)).toEqual([])
+  })
+
+  it('revisiting a saved place flies there and fetches fresh weather', async () => {
+    renderApp()
+    await selectAndSaveRome()
+    await screen.findByRole('list', { name: /hourly forecast/i })
+    const romeCalls = () =>
+      vi.mocked(axios.get).mock.calls.filter(
+        ([, c]) => (c?.params as { latitude: number }).latitude === 41.9028,
+      ).length
+    expect(romeCalls()).toBe(2) // current + forecast
+
+    features = []
+    clickMap(2.35, 48.85) // select somewhere else
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Rome' })).not.toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Rome' }))
+
+    expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [12.4964, 41.9028] }))
+    expect(await screen.findByRole('heading', { name: 'Rome' })).toBeInTheDocument()
+    // cached data is still "fresh" for minutes, yet revisiting must re-request it
+    await waitFor(() => expect(romeCalls()).toBe(4))
   })
 })

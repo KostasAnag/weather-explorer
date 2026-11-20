@@ -42,3 +42,14 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color
   .page { height: auto; }
   .map { height: 60vh; }
 }
+.saved { background: #fff; border-radius: .75rem; padding: .9rem 1.25rem; box-shadow: 0 1px 4px rgb(0 0 0 / .15); }
+.saved h2 { margin: 0 0 .5rem; font-size: .95rem; }
+.saved .empty { margin: 0; font-size: .85rem; color: #64748b; }
+.saved ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+.saved li { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 999px; overflow: hidden; background: #f8fafc; }
+.saved button { border: 0; background: transparent; font: inherit; font-size: .8rem; cursor: pointer; padding: .3rem .6rem; }
+.saved button:hover { background: #e2e8f0; }
+.saved-name[aria-current="true"] { background: #dbeafe; font-weight: 600; }
+.saved-remove { color: #64748b; padding: .3rem .55rem; }
+.save-btn { margin: 0 0 1rem; padding: .4rem .8rem; border: 0; border-radius: .5rem; background: #16a34a; color: #fff; font: inherit; cursor: pointer; }
+.save-btn:disabled { background: #94a3b8; cursor: default; }

@@ -38,6 +38,24 @@ describe('WeatherPanel', () => {
     expect(screen.getByRole('heading', { name: 'Athens' })).toBeInTheDocument()
   })
 
+  it('renders children (e.g. a save button) once a location is selected', () => {
+    render(
+      <WeatherPanel coordinates={coords} weather={weather}>
+        <button>Save location</button>
+      </WeatherPanel>,
+    )
+    expect(screen.getByRole('button', { name: 'Save location' })).toBeInTheDocument()
+  })
+
+  it('does not render children in the empty state', () => {
+    render(
+      <WeatherPanel coordinates={null}>
+        <button>Save location</button>
+      </WeatherPanel>,
+    )
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
   it('renders all current metrics and the coordinates', () => {
     render(<WeatherPanel coordinates={coords} weather={weather} />)
     expect(screen.getByText('37.9838, 23.7275')).toBeInTheDocument()
