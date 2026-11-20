@@ -70,5 +70,3 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color
   .search input { width: 100%; }
   .search { flex: 1 1 100%; }
 }
-.saved li, .saved-name { white-space: nowrap; }
-.saved-coords { align-self: center; font-family: monospace; font-size: .7rem; color: #64748b; padding-right: .2rem; }

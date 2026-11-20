@@ -1,4 +1,4 @@
-import { locationLabel, MY_LOCATION_NAME } from '../lib/locations'
+import { locationLabel } from '../lib/locations'
 import type { SavedLocation } from '../types/weather'
 
 interface SavedLocationsListProps {
@@ -31,12 +31,6 @@ export function SavedLocationsList({
               >
                 {locationLabel(loc)}
               </button>
-              {/* Several "My location" saves look identical, so show where each one is. */}
-              {loc.name === MY_LOCATION_NAME && (
-                <span className="saved-coords">
-                  {loc.latitude}, {loc.longitude}
-                </span>
-              )}
               <button
                 type="button"
                 className="saved-remove"

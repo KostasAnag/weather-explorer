@@ -12,7 +12,7 @@ import { useForecast } from './hooks/useForecast'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useSavedLocations } from './hooks/useSavedLocations'
 import { round4 } from './lib/coordinates'
-import { locationId, MY_LOCATION_NAME } from './lib/locations'
+import { locationId } from './lib/locations'
 import type { Coordinates, PlaceSuggestion, SavedLocation, SelectedLocation } from './types/weather'
 
 export default function App() {
@@ -25,7 +25,7 @@ export default function App() {
   const forecast = useForecast(selected)
   // The user's own position: select the exact coordinates (no name lookup) and fly there.
   const handlePosition = useCallback((position: Coordinates) => {
-    setSelected({ name: MY_LOCATION_NAME, ...position })
+    setSelected({ name: 'My location', ...position })
     setFocus(position)
   }, [])
   const geolocation = useGeolocation(handlePosition)
