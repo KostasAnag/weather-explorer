@@ -1,6 +1,11 @@
 * { box-sizing: border-box; }
 body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color: #0f172a; }
 .page { height: 95vh; display: flex; flex-direction: column; padding: 1rem 1rem 0; } /* leaves 5vh of the viewport free below */
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.locate { text-align: right; }
+.locate button { padding: .5rem .9rem; border: 0; border-radius: .5rem; background: #2563eb; color: #fff; font: inherit; cursor: pointer; }
+.locate button:disabled { opacity: .6; cursor: progress; }
+.locate [role="alert"] { margin: .35rem 0 0; max-width: 18rem; font-size: .8rem; color: #b91c1c; }
 .header h1 { margin: 0; font-size: 2rem; }
 .header p { margin: .25rem 0 1rem; color: #475569; }
 .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 70vw 1fr; gap: 1rem; align-items: start; }

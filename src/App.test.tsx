@@ -1,13 +1,15 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import App from './App'
 
 const handlers: Record<string, (e: unknown) => void> = {}
 let features: unknown[] = []
+const flyTo = vi.fn()
 vi.mock('maplibre-gl', () => ({
   ...{
     Map: vi.fn().mockImplementation(function () {
-      return { on: (t: string, fn: (e: unknown) => void) => (handlers[t] = fn), addControl: vi.fn(), queryRenderedFeatures: () => features, remove: vi.fn() }
+      return { on: (t: string, fn: (e: unknown) => void) => (handlers[t] = fn), addControl: vi.fn(), queryRenderedFeatures: () => features, flyTo, remove: vi.fn() }
     }),
     NavigationControl: vi.fn(),
     Marker: vi.fn().mockImplementation(function () {
@@ -83,5 +85,25 @@ describe('App: click map -> fetch -> display weather', () => {
       latitude: 41.9028,
       longitude: 12.4964,
     })
+  })
+
+  it('centers the map on the user without selecting a location or fetching weather', async () => {
+    vi.mocked(axios.get).mockClear()
+    flyTo.mockClear()
+    features = []
+    vi.stubGlobal('navigator', {
+      geolocation: {
+        getCurrentPosition: (ok: (p: GeolocationPosition) => void) =>
+          ok({ coords: { latitude: 51.5074, longitude: -0.1278 } } as GeolocationPosition),
+      },
+    })
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /use my location/i }))
+
+    expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [-0.1278, 51.5074] }))
+    expect(axios.get).not.toHaveBeenCalled()
+    expect(screen.getByText(/select a location/i)).toBeInTheDocument()
+    vi.unstubAllGlobals()
   })
 })
