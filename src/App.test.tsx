@@ -11,6 +11,7 @@ const flyTo = vi.fn()
 const markers: Array<{ element: HTMLElement; removed: boolean }> = []
 vi.mock('maplibre-gl', () => ({
   ...{
+    setWorkerUrl: vi.fn(),
     Map: vi.fn().mockImplementation(function () {
       return { on: (t: string, fn: (e: unknown) => void) => (handlers[t] = fn), addControl: vi.fn(), queryRenderedFeatures: () => features, flyTo, remove: vi.fn() }
     }),
