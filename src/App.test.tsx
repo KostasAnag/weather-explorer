@@ -17,20 +17,37 @@ vi.mock('maplibre-gl', () => ({
 }))
 vi.mock('axios')
 
+const currentBody = (temp: number, code: number) => ({
+  latitude: 0, longitude: 0,
+  current: {
+    time: '2026-11-20T12:00', temperature_2m: temp, apparent_temperature: 7,
+    relative_humidity_2m: 80, precipitation: 1.2, weather_code: code,
+    cloud_cover: 100, pressure_msl: 1002, wind_speed_10m: 20,
+    wind_direction_10m: 200, is_day: 1,
+  },
+})
+const forecastBody = {
+  latitude: 0, longitude: 0,
+  hourly: {
+    time: ['2026-11-20T12:00', '2026-11-20T13:00'],
+    temperature_2m: [9, 10], precipitation_probability: [20, 30], weather_code: [3, 3],
+  },
+  daily: {
+    time: ['2026-11-20', '2026-11-21'], weather_code: [3, 61],
+    temperature_2m_max: [12, 13], temperature_2m_min: [4, 5],
+    precipitation_sum: [1, 2], precipitation_probability_max: [40, 60],
+  },
+}
+function fakeApi(temp: number, code: number) {
+  vi.mocked(axios.get).mockImplementation(async (_url, config) => {
+    const params = (config?.params ?? {}) as Record<string, unknown>
+    return { data: params.current ? currentBody(temp, code) : forecastBody }
+  })
+}
+
 describe('App: click map -> fetch -> display weather', () => {
   it('starts empty, then shows weather after a map click', async () => {
-    vi.mocked(axios.get).mockResolvedValue({
-      data: {
-        latitude: 48.85,
-        longitude: 2.35,
-        current: {
-          time: '2026-11-20T12:00', temperature_2m: 9.5, apparent_temperature: 7,
-          relative_humidity_2m: 80, precipitation: 1.2, weather_code: 63,
-          cloud_cover: 100, pressure_msl: 1002, wind_speed_10m: 20,
-          wind_direction_10m: 200, is_day: 1,
-        },
-      },
-    })
+    fakeApi(9.5, 63)
     features = []
     render(<App />)
     expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
@@ -41,6 +58,9 @@ describe('App: click map -> fetch -> display weather', () => {
 
     expect(await screen.findByText('Moderate rain')).toBeInTheDocument()
     expect(screen.getByText('9.5 °C')).toBeInTheDocument()
+    // forecast sections appear too
+    expect(await screen.findByRole('list', { name: /hourly forecast/i })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /7-day forecast/i })).toBeInTheDocument()
     expect(vi.mocked(axios.get).mock.calls[0][1]?.params as object).toMatchObject({
       latitude: 48.8566,
       longitude: 2.3522,
@@ -48,17 +68,7 @@ describe('App: click map -> fetch -> display weather', () => {
   })
 
   it('shows the city name when a city is clicked', async () => {
-    vi.mocked(axios.get).mockResolvedValue({
-      data: {
-        latitude: 41.9, longitude: 12.5,
-        current: {
-          time: 't', temperature_2m: 15, apparent_temperature: 14,
-          relative_humidity_2m: 60, precipitation: 0, weather_code: 0,
-          cloud_cover: 0, pressure_msl: 1010, wind_speed_10m: 5,
-          wind_direction_10m: 10, is_day: 1,
-        },
-      },
-    })
+    fakeApi(15, 0)
     features = [{
       sourceLayer: 'place',
       properties: { name: 'Rome', class: 'city' },

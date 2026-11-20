@@ -43,3 +43,48 @@ export interface CurrentWeather {
 export interface SelectedLocation extends Coordinates {
   name?: string
 }
+
+/** Open-Meteo returns hourly/daily data as parallel arrays (one array per variable). */
+export interface OpenMeteoHourly {
+  time: string[]
+  temperature_2m: number[]
+  precipitation_probability: number[]
+  weather_code: number[]
+}
+
+export interface OpenMeteoDaily {
+  time: string[]
+  weather_code: number[]
+  temperature_2m_max: number[]
+  temperature_2m_min: number[]
+  precipitation_sum: number[]
+  precipitation_probability_max: number[]
+}
+
+export interface OpenMeteoFullForecastResponse {
+  latitude: number
+  longitude: number
+  hourly: OpenMeteoHourly
+  daily: OpenMeteoDaily
+}
+
+export interface HourlyForecastPoint {
+  time: string
+  temperature: number
+  precipitationProbability: number
+  weatherCode: number
+}
+
+export interface DailyForecastDay {
+  date: string
+  weatherCode: number
+  tempMax: number
+  tempMin: number
+  precipitationSum: number
+  precipitationProbability: number
+}
+
+export interface Forecast {
+  hourly: HourlyForecastPoint[]
+  daily: DailyForecastDay[]
+}
