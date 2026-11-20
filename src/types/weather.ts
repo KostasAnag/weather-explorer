@@ -107,3 +107,14 @@ export interface OpenMeteoGeocodingResponse {
   // The API omits `results` entirely when nothing matches.
   results?: Array<PlaceSuggestion & Record<string, unknown>>
 }
+
+/** What the map draws for one place: a small temperature badge. */
+export interface MapBadge extends Coordinates {
+  id: string
+  label: string
+  /** Weather fields are missing while that location's weather is still loading. */
+  temperature?: number
+  weatherCode?: number
+  isDay?: boolean
+  selected: boolean
+}
