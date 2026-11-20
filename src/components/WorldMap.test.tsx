@@ -5,6 +5,7 @@ import { WorldMap } from './WorldMap'
 const handlers: Record<string, (e: unknown) => void> = {}
 const remove = vi.fn()
 const queryRenderedFeatures = vi.fn()
+const flyTo = vi.fn()
 
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn().mockImplementation(function () {
@@ -14,6 +15,7 @@ vi.mock('maplibre-gl', () => ({
       },
       addControl: vi.fn(),
       queryRenderedFeatures,
+      flyTo,
       remove,
     }
   }),
@@ -56,6 +58,22 @@ describe('WorldMap', () => {
       latitude: 48.8566,
       longitude: 2.3522,
     })
+  })
+
+  it('flies to the focus point (centre + zoom) without selecting anything', () => {
+    flyTo.mockReset()
+    const onSelect = vi.fn()
+    const { rerender } = render(<WorldMap selected={null} focus={null} onSelect={onSelect} />)
+    expect(flyTo).not.toHaveBeenCalled()
+
+    rerender(
+      <WorldMap selected={null} focus={{ latitude: 37.98, longitude: 23.72 }} onSelect={onSelect} />,
+    )
+
+    expect(flyTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [23.72, 37.98], zoom: expect.any(Number) }),
+    )
+    expect(onSelect).not.toHaveBeenCalled()
   })
 
   it('destroys the map on unmount', () => {

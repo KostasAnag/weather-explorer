@@ -3,14 +3,16 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef } from 'react'
 import { normalizeLngLat } from '../lib/coordinates'
 import { findPlace, type MapFeatureLike } from '../lib/places'
-import type { SelectedLocation } from '../types/weather'
+import type { Coordinates, SelectedLocation } from '../types/weather'
 
 interface WorldMapProps {
   selected: SelectedLocation | null
+  /** When set, the map flies here. It does not select a location. */
+  focus?: Coordinates | null
   onSelect: (location: SelectedLocation) => void
 }
 
-export function WorldMap({ selected, onSelect }: WorldMapProps) {
+export function WorldMap({ selected, focus = null, onSelect }: WorldMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const markerRef = useRef<maplibregl.Marker | null>(null)
@@ -56,6 +58,13 @@ export function WorldMap({ selected, onSelect }: WorldMapProps) {
         .addTo(mapRef.current)
     }
   }, [selected])
+
+  // Fly to the focus point (e.g. the user's position).
+  useEffect(() => {
+    if (focus && mapRef.current) {
+      mapRef.current.flyTo({ center: [focus.longitude, focus.latitude], zoom: 10 })
+    }
+  }, [focus])
 
   return <div ref={containerRef} className="map" data-testid="map" />
 }
