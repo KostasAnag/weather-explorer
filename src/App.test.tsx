@@ -99,7 +99,7 @@ describe('App: click map -> fetch -> display weather', () => {
     })
     render(<App />)
 
-    await userEvent.click(screen.getByRole('button', { name: /use my location/i }))
+    await userEvent.click(screen.getByRole('button', { name: /zoom to my location/i }))
 
     expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [-0.1278, 51.5074] }))
     expect(axios.get).not.toHaveBeenCalled()

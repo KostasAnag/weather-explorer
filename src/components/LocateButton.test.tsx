@@ -6,7 +6,7 @@ describe('LocateButton', () => {
   it('calls onLocate when clicked', async () => {
     const onLocate = vi.fn()
     render(<LocateButton state={{ status: 'idle' }} onLocate={onLocate} />)
-    await userEvent.click(screen.getByRole('button', { name: /use my location/i }))
+    await userEvent.click(screen.getByRole('button', { name: /zoom to my location/i }))
     expect(onLocate).toHaveBeenCalledTimes(1)
   })
 

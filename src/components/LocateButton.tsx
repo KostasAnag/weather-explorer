@@ -17,7 +17,7 @@ export function LocateButton({ state, onLocate }: LocateButtonProps) {
   return (
     <div className="locate">
       <button type="button" onClick={onLocate} disabled={loading}>
-        {loading ? 'Locating…' : 'Use my location'}
+        {loading ? 'Locating…' : 'Zoom to my location'}
       </button>
       {state.status === 'error' && <p role="alert">{MESSAGES[state.reason]}</p>}
     </div>
