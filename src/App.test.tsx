@@ -7,14 +7,24 @@ import App from './App'
 const handlers: Record<string, (e: unknown) => void> = {}
 let features: unknown[] = []
 const flyTo = vi.fn()
+const markers: Array<{ element: HTMLElement; removed: boolean }> = []
 vi.mock('maplibre-gl', () => ({
   ...{
     Map: vi.fn().mockImplementation(function () {
       return { on: (t: string, fn: (e: unknown) => void) => (handlers[t] = fn), addControl: vi.fn(), queryRenderedFeatures: () => features, flyTo, remove: vi.fn() }
     }),
     NavigationControl: vi.fn(),
-    Marker: vi.fn().mockImplementation(function () {
-      return { setLngLat: vi.fn().mockReturnThis(), addTo: vi.fn().mockReturnThis(), remove: vi.fn() }
+    Marker: vi.fn().mockImplementation(function (options: { element: HTMLElement }) {
+      const marker = { element: options.element, removed: false }
+      markers.push(marker)
+      const api = {
+        setLngLat: () => api,
+        addTo: () => api,
+        remove: () => {
+          marker.removed = true
+        },
+      }
+      return api
     }),
   },
 }))
@@ -248,5 +258,68 @@ describe('App: search by city name', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Save location' }))
 
     expect(screen.getByRole('list', { name: /saved locations/i })).toHaveTextContent('Athens')
+  })
+})
+
+describe('App: weather badges on the map', () => {
+  const liveBadges = () => markers.filter((m) => !m.removed).map((m) => m.element)
+  const badgeTexts = () => liveBadges().map((el) => el.textContent)
+
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset()
+    flyTo.mockClear()
+    markers.length = 0
+    features = []
+    fakeApi(10, 0)
+  })
+
+  it('shows the selected place as a badge with its temperature', async () => {
+    renderApp()
+    expect(liveBadges()).toHaveLength(0)
+
+    clickMap(2.35, 48.85)
+
+    await waitFor(() => expect(badgeTexts()).toEqual(['☀️ 10°']))
+    expect(liveBadges()[0]).toHaveClass('selected')
+  })
+
+  it('shows saved places on the map right after load, fetching their weather', async () => {
+    localStorage.setItem(
+      'weather-explorer:saved-locations',
+      JSON.stringify([{ id: '41.9028,12.4964', name: 'Rome', latitude: 41.9028, longitude: 12.4964 }]),
+    )
+    renderApp()
+
+    await waitFor(() => expect(badgeTexts()).toEqual(['☀️ 10°']))
+    expect(liveBadges()[0]).toHaveAttribute('aria-label', expect.stringContaining('Rome'))
+    expect(liveBadges()[0]).not.toHaveClass('selected')
+  })
+
+  it('keeps a saved place on the map after selecting somewhere else', async () => {
+    renderApp()
+    features = [rome]
+    clickMap(12.5, 41.9)
+    await screen.findByRole('heading', { name: 'Rome' })
+    await userEvent.click(screen.getByRole('button', { name: 'Save location' }))
+
+    features = []
+    clickMap(2.35, 48.85)
+
+    await waitFor(() => expect(liveBadges()).toHaveLength(2))
+    expect(liveBadges().filter((el) => el.classList.contains('selected'))).toHaveLength(1)
+  })
+
+  it('clicking a saved badge revisits that place', async () => {
+    localStorage.setItem(
+      'weather-explorer:saved-locations',
+      JSON.stringify([{ id: '41.9028,12.4964', name: 'Rome', latitude: 41.9028, longitude: 12.4964 }]),
+    )
+    renderApp()
+    await waitFor(() => expect(badgeTexts()).toEqual(['☀️ 10°']))
+
+    await act(async () => liveBadges()[0].click())
+
+    expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [12.4964, 41.9028] }))
+    expect(await screen.findByRole('heading', { name: 'Rome' })).toBeInTheDocument()
   })
 })

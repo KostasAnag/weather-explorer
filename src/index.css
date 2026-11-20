@@ -70,3 +70,8 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color
   .search input { width: 100%; }
   .search { flex: 1 1 100%; }
 }
+
+.map-badge { position: relative; border: 0; border-radius: 999px; padding: .2rem .55rem; background: #fff; color: #0f172a; font: 600 .8rem system-ui, sans-serif; box-shadow: 0 1px 5px rgb(0 0 0 / .35); cursor: pointer; white-space: nowrap; margin-bottom: 7px; }
+.map-badge::after { content: ''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%); border: 5px solid transparent; border-bottom: 0; border-top-color: #fff; }
+.map-badge.selected { background: #2563eb; color: #fff; z-index: 1; }
+.map-badge.selected::after { border-top-color: #2563eb; }

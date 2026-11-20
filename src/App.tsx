@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ForecastPanel } from './components/ForecastPanel'
 import { LocateButton } from './components/LocateButton'
 import { SaveLocationButton } from './components/SaveLocationButton'
@@ -11,8 +11,10 @@ import { useCurrentWeather } from './hooks/useCurrentWeather'
 import { useForecast } from './hooks/useForecast'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useSavedLocations } from './hooks/useSavedLocations'
+import { useSavedWeather } from './hooks/useSavedWeather'
 import { round4 } from './lib/coordinates'
 import { locationId } from './lib/locations'
+import { buildMapBadges } from './lib/mapBadges'
 import type { Coordinates, PlaceSuggestion, SavedLocation, SelectedLocation } from './types/weather'
 
 export default function App() {
@@ -30,6 +32,21 @@ export default function App() {
   }, [])
   const geolocation = useGeolocation(handlePosition)
   const saved = useSavedLocations()
+  const savedWeather = useSavedWeather(saved.locations)
+
+  // Saved places plus the selection, each with its current temperature.
+  const badges = useMemo(
+    () =>
+      buildMapBadges({
+        saved: saved.locations,
+        selected,
+        weatherById:
+          selected && weather.data
+            ? { ...savedWeather, [locationId(selected)]: weather.data }
+            : savedWeather,
+      }),
+    [saved.locations, selected, savedWeather, weather.data],
+  )
 
   function revisit(location: SavedLocation) {
     // Cached data may still count as fresh; a revisit must always re-request it.
@@ -38,6 +55,11 @@ export default function App() {
     }
     setSelected(location)
     setFocus({ latitude: location.latitude, longitude: location.longitude })
+  }
+
+  function handleBadgeClick(id: string) {
+    const location = saved.locations.find((l) => l.id === id)
+    if (location) revisit(location)
   }
 
   function selectPlace(place: PlaceSuggestion) {
@@ -62,7 +84,7 @@ export default function App() {
         </div>
       </header>
       <main className="layout">
-        <WorldMap selected={selected} focus={focus} onSelect={setSelected} />
+        <WorldMap badges={badges} onBadgeClick={handleBadgeClick} focus={focus} onSelect={setSelected} />
         <div className="side">
           <SavedLocationsList
             locations={saved.locations}
