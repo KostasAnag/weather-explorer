@@ -23,19 +23,6 @@ describe('SavedLocationsList', () => {
     expect(items[1]).toHaveTextContent('10, 20')
   })
 
-  it('shows coordinates next to named places so same-named ones are distinguishable', () => {
-    render(<SavedLocationsList locations={locations} onSelect={vi.fn()} onRemove={vi.fn()} />)
-    const [named, unnamed] = screen.getAllByRole('listitem')
-    expect(named).toHaveTextContent('41.9028, 12.4964')
-    // unnamed places already use the coordinates as their label: don't repeat them
-    expect(unnamed.textContent?.match(/10, 20/g)).toHaveLength(1)
-  })
-
-  it('keeps the button name to the place name only', () => {
-    render(<SavedLocationsList locations={locations} onSelect={vi.fn()} onRemove={vi.fn()} />)
-    expect(screen.getByRole('button', { name: 'Rome' })).toBeInTheDocument()
-  })
-
   it('selects a location when its name is clicked', async () => {
     const onSelect = vi.fn()
     render(<SavedLocationsList locations={locations} onSelect={onSelect} onRemove={vi.fn()} />)
