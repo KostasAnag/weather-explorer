@@ -108,3 +108,4 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color
 .chart-data summary { cursor: pointer; color: #2563eb; }
 .chart-data table { border-collapse: collapse; margin-top: .5rem; width: 100%; }
 .chart-data th, .chart-data td { padding: .25rem .5rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+.loading { color: #64748b; padding: 1rem .25rem; }
