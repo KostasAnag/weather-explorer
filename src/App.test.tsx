@@ -68,15 +68,19 @@ function fakeApi(temp: number, code: number) {
   })
 }
 
-function renderApp(route = '/') {
+/** Pages are lazy-loaded, so wait until the route's page has actually rendered. */
+async function renderApp(route = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  const view = render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[route]}>
         <App />
       </MemoryRouter>
     </QueryClientProvider>,
   )
+  if (route === '/') await screen.findByRole('combobox', { name: /search for a city/i })
+  if (route.startsWith('/compare')) await screen.findByRole('heading', { name: /compare locations/i })
+  return view
 }
 
 const clickMap = (lng: number, lat: number) =>
@@ -92,7 +96,7 @@ describe('App: click map -> fetch -> display weather', () => {
   it('starts empty, then shows weather after a map click', async () => {
     fakeApi(9.5, 63)
     features = []
-    renderApp()
+    await renderApp()
     expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
     expect(screen.getByText(/search for a city or click anywhere on the map/i)).toBeInTheDocument()
     expect(screen.getByText(/select a location/i)).toBeInTheDocument()
@@ -117,7 +121,7 @@ describe('App: click map -> fetch -> display weather', () => {
       properties: { name: 'Rome', class: 'city' },
       geometry: { type: 'Point', coordinates: [12.4964, 41.9028] },
     }]
-    renderApp()
+    await renderApp()
 
     handlers.click({ lngLat: { lng: 12.5, lat: 41.9 }, point: { x: 1, y: 1 } })
 
@@ -139,7 +143,7 @@ describe('App: click map -> fetch -> display weather', () => {
           ok({ coords: { latitude: 51.5074, longitude: -0.1278 } } as GeolocationPosition),
       },
     })
-    renderApp()
+    await renderApp()
 
     await userEvent.click(screen.getByRole('button', { name: /zoom to my location/i }))
 
@@ -174,13 +178,13 @@ describe('App: saved locations', () => {
     fakeApi(10, 0)
   })
 
-  it('starts with an empty-state message', () => {
-    renderApp()
+  it('starts with an empty-state message', async () => {
+    await renderApp()
     expect(screen.getByText(/no saved locations yet/i)).toBeInTheDocument()
   })
 
   it('saves the selected place, shows it in the list and stores only location data', async () => {
-    renderApp()
+    await renderApp()
     await selectAndSaveRome()
 
     const list = screen.getByRole('list', { name: /saved locations/i })
@@ -192,16 +196,16 @@ describe('App: saved locations', () => {
   })
 
   it('restores saved locations after a reload', async () => {
-    const first = renderApp()
+    const first = await renderApp()
     await selectAndSaveRome()
     first.unmount()
 
-    renderApp()
+    await renderApp()
     expect(screen.getByRole('button', { name: 'Rome' })).toBeInTheDocument()
   })
 
   it('removes a saved location', async () => {
-    renderApp()
+    await renderApp()
     await selectAndSaveRome()
     await userEvent.click(screen.getByRole('button', { name: 'Remove Rome' }))
     expect(screen.getByText(/no saved locations yet/i)).toBeInTheDocument()
@@ -209,7 +213,7 @@ describe('App: saved locations', () => {
   })
 
   it('revisiting a saved place flies there and fetches fresh weather', async () => {
-    renderApp()
+    await renderApp()
     await selectAndSaveRome()
     await screen.findByRole('list', { name: /hourly forecast/i })
     const romeCalls = () =>
@@ -239,7 +243,7 @@ describe('App: search by city name', () => {
   })
 
   it('autocompletes a city, then shows its weather, forecast and flies the map there', async () => {
-    renderApp()
+    await renderApp()
 
     await userEvent.type(screen.getByRole('combobox', { name: /search for a city/i }), 'Ath')
     await userEvent.click(await screen.findByRole('option', { name: 'Athens, Attica, Greece' }))
@@ -254,7 +258,7 @@ describe('App: search by city name', () => {
   })
 
   it('lets the user save a searched city', async () => {
-    renderApp()
+    await renderApp()
     await userEvent.type(screen.getByRole('combobox', { name: /search for a city/i }), 'Ath')
     await userEvent.click(await screen.findByRole('option', { name: 'Athens, Attica, Greece' }))
 
@@ -277,7 +281,7 @@ describe('App: weather badges on the map', () => {
   })
 
   it('shows the selected place as a badge with its temperature', async () => {
-    renderApp()
+    await renderApp()
     expect(liveBadges()).toHaveLength(0)
 
     clickMap(2.35, 48.85)
@@ -291,7 +295,7 @@ describe('App: weather badges on the map', () => {
       'weather-explorer:saved-locations',
       JSON.stringify([{ id: '41.9028,12.4964', name: 'Rome', latitude: 41.9028, longitude: 12.4964 }]),
     )
-    renderApp()
+    await renderApp()
 
     await waitFor(() => expect(badgeTexts()).toEqual(['☀️ 10°']))
     expect(liveBadges()[0]).toHaveAttribute('aria-label', expect.stringContaining('Rome'))
@@ -299,7 +303,7 @@ describe('App: weather badges on the map', () => {
   })
 
   it('keeps a saved place on the map after selecting somewhere else', async () => {
-    renderApp()
+    await renderApp()
     features = [rome]
     clickMap(12.5, 41.9)
     await screen.findByRole('heading', { name: 'Rome' })
@@ -317,7 +321,7 @@ describe('App: weather badges on the map', () => {
       'weather-explorer:saved-locations',
       JSON.stringify([{ id: '41.9028,12.4964', name: 'Rome', latitude: 41.9028, longitude: 12.4964 }]),
     )
-    renderApp()
+    await renderApp()
     await waitFor(() => expect(badgeTexts()).toEqual(['☀️ 10°']))
 
     await act(async () => liveBadges()[0].click())
@@ -335,36 +339,36 @@ describe('App: routing', () => {
     fakeApi(10, 0)
   })
 
-  it('shows the app title and navigation on every page', () => {
-    renderApp('/compare')
+  it('shows the app title and navigation on every page', async () => {
+    await renderApp('/compare')
     expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
     const nav = screen.getByRole('navigation', { name: /main/i })
     expect(within(nav).getByRole('link', { name: 'Map' })).toBeInTheDocument()
     expect(within(nav).getByRole('link', { name: 'Compare' })).toBeInTheDocument()
   })
 
-  it('renders the map page at "/" and the compare page at "/compare"', () => {
-    const { unmount } = renderApp('/')
+  it('renders the map page at "/" and the compare page at "/compare"', async () => {
+    const { unmount } = await renderApp('/')
     expect(screen.getByRole('combobox', { name: /search for a city/i })).toBeInTheDocument()
     unmount()
-    renderApp('/compare')
+    await renderApp('/compare')
     expect(screen.getByRole('heading', { name: /compare locations/i })).toBeInTheDocument()
   })
 
-  it('marks the current page link in the navigation', () => {
-    renderApp('/compare')
+  it('marks the current page link in the navigation', async () => {
+    await renderApp('/compare')
     expect(screen.getByRole('link', { name: 'Compare' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Map' })).not.toHaveAttribute('aria-current')
   })
 
-  it('shows a not-found page for unknown routes', () => {
-    renderApp('/nope')
+  it('shows a not-found page for unknown routes', async () => {
+    await renderApp('/nope')
     expect(screen.getByRole('heading', { name: /page not found/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /back to the map/i })).toHaveAttribute('href', '/')
   })
 
   it('navigates between pages with the links', async () => {
-    renderApp('/')
+    await renderApp('/')
     await userEvent.click(screen.getByRole('link', { name: 'Compare' }))
     expect(screen.getByRole('heading', { name: /compare locations/i })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('link', { name: 'Map' }))
@@ -372,7 +376,7 @@ describe('App: routing', () => {
   })
 
   it('end to end: save two places on the map, then compare them', async () => {
-    renderApp('/')
+    await renderApp('/')
     features = [rome]
     clickMap(12.5, 41.9)
     await screen.findByRole('heading', { name: 'Rome' })
