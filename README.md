@@ -161,6 +161,7 @@ all pass.
 `vercel.json` contains a rewrite so deep links such as `/compare` work on a static host (single-page
 app fallback). To deploy on Vercel: import the repository, keep the **Vite** preset
 (build command `npm run build`, output directory `dist`), and no environment variables are needed.
+*(Not deployed yet; see [Next steps](#4-next-steps).)*
 
 ---
 
@@ -265,15 +266,26 @@ has **196 tests in 32 files**.
 
 With more time, roughly in priority order:
 
-
-1. **Richer saved places:** rename, reorder, import and export, instead of showing coordinates for
+1. **Ship it:** deploy to Vercel and add GitHub Actions (lint, type-check, test, build on every PR).
+2. **Visible data attribution:** show an Open-Meteo credit in the UI footer (CC BY 4.0).
+3. **End-to-end tests:** Playwright flows against mocked network responses, to cover what jsdom
+   cannot (the real map and the charts).
+4. **Keep state across pages:** the current map selection is lost when switching to Compare and back;
+   lift it to a shared store or the URL.
+5. **Tailwind and a design system:** migrate the hand-written CSS, and add **dark mode** (the chart
+   palette already has validated dark-mode values).
+6. **Units and language:** a metric/imperial toggle (°C/°F, km/h/mph) and i18n.
+7. **Richer saved places:** rename, reorder, import and export, instead of showing coordinates for
    unnamed spots.
-
-2. **Weather on the map:** a precipitation radar overlay (needs a tile service, probably with an API
+8. **Richer comparison:** choose which metric the charts show, add precipitation and wind series,
+   and share a compare link as a first-class action.
+9. **Weather on the map:** a precipitation radar overlay (needs a tile service, probably with an API
    key read from an env var).
+10. **Performance:** batch several saved places into one Open-Meteo request (it accepts multiple
+    coordinates), lazy-load MapLibre inside the page, and prefetch the compare chunk on hover.
+11. **Resilience and accessibility:** retry buttons and error boundaries, offline handling, a full
+    screen-reader and keyboard pass over the map interactions.
 
-3. **Styling:** the original brief listed Tailwind CSS. I chose plain CSS to keep the first features
-  simple; migrating is listed in the next steps.
 ---
 
 ## 5. Additional notes
@@ -294,6 +306,8 @@ With more time, roughly in priority order:
   they share one dependency cache.
 - **Dev-mode speed:** the first map load can take several seconds in `npm run dev` (unminified
   MapLibre and large low-zoom tiles). `npm run build && npm run preview` is noticeably quicker.
+- **Styling:** the original brief listed Tailwind CSS. I chose plain CSS to keep the first features
+  simple; migrating is listed in the next steps.
 - **Git history:** each feature was developed on its own branch with conventional commit messages and
   merged into `main` with a merge commit, so the graph shows one bubble per feature
   (`git log --graph --oneline`).
