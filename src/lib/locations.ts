@@ -1,4 +1,4 @@
-import type { SavedLocation, SelectedLocation } from '../types/weather'
+import type { PlaceSuggestion, SavedLocation, SelectedLocation } from '../types/weather'
 import { round4 } from './coordinates'
 
 /** Same rounded coordinates = same place, which is how duplicates are detected. */
@@ -18,4 +18,10 @@ export function toSavedLocation(location: SelectedLocation): SavedLocation {
 
 export function locationLabel(location: SelectedLocation): string {
   return location.name ?? `${location.latitude}, ${location.longitude}`
+}
+
+/** 'Athens, Attica, Greece': region and country disambiguate same-named cities. */
+export function suggestionLabel({ name, admin1, country }: PlaceSuggestion): string {
+  const parts = [name, admin1, country].filter((p): p is string => Boolean(p))
+  return [...new Set(parts)].join(', ')
 }

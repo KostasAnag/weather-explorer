@@ -1,4 +1,4 @@
-import { locationId, locationLabel, toSavedLocation } from './locations'
+import { locationId, locationLabel, suggestionLabel, toSavedLocation } from './locations'
 
 describe('locationId', () => {
   it('is built from coordinates rounded to 4 decimals', () => {
@@ -25,5 +25,21 @@ describe('locationLabel', () => {
   it('prefers the name, falls back to coordinates', () => {
     expect(locationLabel({ name: 'Rome', latitude: 1, longitude: 2 })).toBe('Rome')
     expect(locationLabel({ latitude: 37.9838, longitude: 23.7275 })).toBe('37.9838, 23.7275')
+  })
+})
+
+describe('suggestionLabel', () => {
+  const base = { id: 1, latitude: 0, longitude: 0 }
+
+  it('joins name, region and country to tell same-named places apart', () => {
+    expect(suggestionLabel({ ...base, name: 'Athens', admin1: 'Attica', country: 'Greece' })).toBe(
+      'Athens, Attica, Greece',
+    )
+  })
+
+  it('skips missing parts and repeated parts', () => {
+    expect(suggestionLabel({ ...base, name: 'Singapore', country: 'Singapore' })).toBe('Singapore')
+    expect(suggestionLabel({ ...base, name: 'Monaco' })).toBe('Monaco')
+    expect(suggestionLabel({ ...base, name: 'Paris', admin1: 'Paris', country: 'France' })).toBe('Paris, France')
   })
 })

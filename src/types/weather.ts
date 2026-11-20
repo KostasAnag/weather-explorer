@@ -94,3 +94,16 @@ export interface SavedLocation extends Coordinates {
   id: string
   name?: string
 }
+
+/** One match from the Open-Meteo Geocoding API (forward geocoding: name -> coordinates). */
+export interface PlaceSuggestion extends Coordinates {
+  id: number
+  name: string
+  admin1?: string // region/state, helps tell same-named cities apart
+  country?: string
+}
+
+export interface OpenMeteoGeocodingResponse {
+  // The API omits `results` entirely when nothing matches.
+  results?: Array<PlaceSuggestion & Record<string, unknown>>
+}
