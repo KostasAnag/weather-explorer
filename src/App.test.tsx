@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
+import { MemoryRouter } from 'react-router'
 import App from './App'
 
 const handlers: Record<string, (e: unknown) => void> = {}
@@ -67,11 +68,13 @@ function fakeApi(temp: number, code: number) {
   })
 }
 
-function renderApp() {
+function renderApp(route = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <App />
+      <MemoryRouter initialEntries={[route]}>
+        <App />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -321,5 +324,73 @@ describe('App: weather badges on the map', () => {
 
     expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [12.4964, 41.9028] }))
     expect(await screen.findByRole('heading', { name: 'Rome' })).toBeInTheDocument()
+  })
+})
+
+describe('App: routing', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset()
+    flyTo.mockClear()
+    features = []
+    fakeApi(10, 0)
+  })
+
+  it('shows the app title and navigation on every page', () => {
+    renderApp('/compare')
+    expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
+    const nav = screen.getByRole('navigation', { name: /main/i })
+    expect(within(nav).getByRole('link', { name: 'Map' })).toBeInTheDocument()
+    expect(within(nav).getByRole('link', { name: 'Compare' })).toBeInTheDocument()
+  })
+
+  it('renders the map page at "/" and the compare page at "/compare"', () => {
+    const { unmount } = renderApp('/')
+    expect(screen.getByRole('combobox', { name: /search for a city/i })).toBeInTheDocument()
+    unmount()
+    renderApp('/compare')
+    expect(screen.getByRole('heading', { name: /compare locations/i })).toBeInTheDocument()
+  })
+
+  it('marks the current page link in the navigation', () => {
+    renderApp('/compare')
+    expect(screen.getByRole('link', { name: 'Compare' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Map' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('shows a not-found page for unknown routes', () => {
+    renderApp('/nope')
+    expect(screen.getByRole('heading', { name: /page not found/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /back to the map/i })).toHaveAttribute('href', '/')
+  })
+
+  it('navigates between pages with the links', async () => {
+    renderApp('/')
+    await userEvent.click(screen.getByRole('link', { name: 'Compare' }))
+    expect(screen.getByRole('heading', { name: /compare locations/i })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('link', { name: 'Map' }))
+    expect(screen.getByRole('combobox', { name: /search for a city/i })).toBeInTheDocument()
+  })
+
+  it('end to end: save two places on the map, then compare them', async () => {
+    renderApp('/')
+    features = [rome]
+    clickMap(12.5, 41.9)
+    await screen.findByRole('heading', { name: 'Rome' })
+    await userEvent.click(screen.getByRole('button', { name: 'Save location' }))
+
+    features = []
+    clickMap(2.35, 48.85)
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Rome' })).not.toBeInTheDocument())
+    await userEvent.click(await screen.findByRole('button', { name: 'Save location' }))
+
+    await userEvent.click(screen.getByRole('link', { name: 'Compare' }))
+    const boxes = screen.getAllByRole('checkbox')
+    expect(boxes).toHaveLength(2)
+    await userEvent.click(boxes[0])
+    await userEvent.click(boxes[1])
+
+    const table = await screen.findByRole('table', { name: /current weather comparison/i })
+    expect(within(table).getAllByRole('row')).toHaveLength(3)
+    expect(await within(table).findAllByText('10 °C')).toHaveLength(2)
   })
 })
