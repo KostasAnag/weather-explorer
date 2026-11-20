@@ -118,3 +118,12 @@ export interface MapBadge extends Coordinates {
   isDay?: boolean
   selected: boolean
 }
+
+/** One compared location with whatever has loaded so far. */
+export interface ComparisonEntry {
+  location: SavedLocation
+  weather?: CurrentWeather
+  forecast?: Forecast
+  weatherError: boolean
+  forecastError: boolean
+}

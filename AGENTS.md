@@ -5,7 +5,7 @@ feature by feature, test-first, for a junior-to-mid React/TypeScript showcase.
 
 ## Stack
 React 19, TypeScript, Vite, MapLibre GL JS, Axios, TanStack Query, Vitest +
-React Testing Library. Planned: React Router, Tailwind, Recharts, localStorage.
+React Testing Library. React Router (`/` map, `/compare`), Recharts, localStorage. Planned: Tailwind.
 Open-Meteo needs no API key; if one is ever needed, use `import.meta.env.VITE_*`
 and document it in `.env.example` (never commit `.env`).
 
@@ -27,6 +27,7 @@ and document it in `.env.example` (never commit `.env`).
 src/types/       API response types + app models (Open-Meteo shape vs. app shape)
 src/services/    ALL HTTP calls (axios). Components never call axios.
 src/hooks/       Custom hooks (TanStack Query wrappers, browser APIs)
+src/pages/       One component per route (ExplorerPage, ComparePage, NotFoundPage)
 src/components/  Presentational, reusable components
 src/lib/         Pure helpers (formatting, coordinate normalization, WMO codes)
 src/test/        Test setup
@@ -38,6 +39,7 @@ Tests live next to the code: `Foo.tsx` ↔ `Foo.test.tsx`.
 - Geolocation ("Zoom to my location") selects the user's exact coordinates, labelled "My location", flies the map there and shows weather. Never look up a nearby/nearest city name for it.
 - Persist locations only (never weather data); fetch fresh weather on selection; no duplicate saved locations.
 - Every data view handles loading, error and empty states.
+- Compare: 2-5 saved locations, selection stored in the URL (`?loc=`). Chart data keys are index-based (`loc0`..), never location ids. Charts use the validated palette in `lib/compareData.ts`; every chart needs a legend and a "view data as table" fallback. Recharts renders nothing in jsdom (no layout), so test the data builders and the table/aria fallbacks, and check the chart visually in a browser.
 - Mock at boundaries: `axios` in service tests, services in hook tests, `maplibre-gl` in component tests (jsdom has no WebGL). No real network in tests.
 - Keep it simple: no abstractions without a second use. No `any`; use `import type` for types (`verbatimModuleSyntax` is on; `erasableSyntaxOnly` forbids enums).
 - Responsive layout is required; keep accessibility roles (`status`, `alert`) on state messages.
