@@ -1,8 +1,8 @@
 import { describeWeatherCode } from '../lib/weatherCodes'
-import type { Coordinates, CurrentWeather } from '../types/weather'
+import type { CurrentWeather, SelectedLocation } from '../types/weather'
 
 interface WeatherPanelProps {
-  coordinates: Coordinates | null
+  coordinates: SelectedLocation | null
   weather?: CurrentWeather
   isLoading?: boolean
   error?: Error | null
@@ -21,12 +21,13 @@ export function WeatherPanel({ coordinates, weather, isLoading, error }: Weather
   if (!coordinates) {
     return (
       <aside className="panel">
-        <p>Click anywhere on the map to see the weather.</p>
+        <p>Select a location on the map to see its weather here.</p>
       </aside>
     )
   }
   return (
     <aside className="panel">
+      {coordinates.name && <h2 className="place">{coordinates.name}</h2>}
       <p className="coords">
         {coordinates.latitude}, {coordinates.longitude}
       </p>
@@ -34,7 +35,7 @@ export function WeatherPanel({ coordinates, weather, isLoading, error }: Weather
       {error && <p role="alert">Could not load weather. Please try another spot.</p>}
       {weather && (
         <>
-          <h2>{describeWeatherCode(weather.weatherCode)}</h2>
+          <p className="conditions">{describeWeatherCode(weather.weatherCode)}</p>
           <p className="temp">{weather.temperature} °C</p>
           <p>Feels like {weather.feelsLike} °C</p>
           <dl className="metrics">

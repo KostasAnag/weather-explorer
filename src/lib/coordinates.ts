@@ -1,6 +1,6 @@
 import type { Coordinates } from '../types/weather'
 
-const round4 = (n: number) => Math.round(n * 10000) / 10000
+export const round4 = (n: number) => Math.round(n * 10000) / 10000
 
 /**
  * MapLibre can report longitudes outside [-180, 180] when the user pans

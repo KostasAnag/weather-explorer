@@ -2,11 +2,12 @@ import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef } from 'react'
 import { normalizeLngLat } from '../lib/coordinates'
-import type { Coordinates } from '../types/weather'
+import { findPlace, type MapFeatureLike } from '../lib/places'
+import type { SelectedLocation } from '../types/weather'
 
 interface WorldMapProps {
-  selected: Coordinates | null
-  onSelect: (coordinates: Coordinates) => void
+  selected: SelectedLocation | null
+  onSelect: (location: SelectedLocation) => void
 }
 
 export function WorldMap({ selected, onSelect }: WorldMapProps) {
@@ -23,23 +24,21 @@ export function WorldMap({ selected, onSelect }: WorldMapProps) {
   useEffect(() => {
     const map = new maplibregl.Map({
       container: containerRef.current!,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors',
-          },
-        },
-        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-      },
+      // Vector style (no API key): city labels are real features we can click.
+      style: 'https://tiles.openfreemap.org/styles/liberty',
       center: [0, 20],
       zoom: 2,
     })
     map.addControl(new maplibregl.NavigationControl())
-    map.on('click', (e) => onSelectRef.current(normalizeLngLat(e.lngLat)))
+    map.on('click', (e) => {
+      // Look for a city label within a few pixels of the click.
+      const { x, y } = e.point
+      const features = map.queryRenderedFeatures([
+        [x - 10, y - 10],
+        [x + 10, y + 10],
+      ]) as MapFeatureLike[]
+      onSelectRef.current(findPlace(features) ?? normalizeLngLat(e.lngLat))
+    })
     mapRef.current = map
     return () => {
       map.remove()

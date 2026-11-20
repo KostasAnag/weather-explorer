@@ -20,7 +20,7 @@ const coords = { latitude: 37.9838, longitude: 23.7275 }
 describe('WeatherPanel', () => {
   it('shows an empty state when nothing is selected', () => {
     render(<WeatherPanel coordinates={null} />)
-    expect(screen.getByText(/click anywhere on the map/i)).toBeInTheDocument()
+    expect(screen.getByText(/select a location/i)).toBeInTheDocument()
   })
 
   it('shows a loading state', () => {
@@ -31,6 +31,11 @@ describe('WeatherPanel', () => {
   it('shows an error state', () => {
     render(<WeatherPanel coordinates={coords} error={new Error('x')} />)
     expect(screen.getByRole('alert')).toHaveTextContent(/could not load weather/i)
+  })
+
+  it('shows the place name when a city was selected', () => {
+    render(<WeatherPanel coordinates={{ ...coords, name: 'Athens' }} weather={weather} />)
+    expect(screen.getByRole('heading', { name: 'Athens' })).toBeInTheDocument()
   })
 
   it('renders all current metrics and the coordinates', () => {

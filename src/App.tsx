@@ -3,19 +3,25 @@ import { useState } from 'react'
 import { WeatherPanel } from './components/WeatherPanel'
 import { WorldMap } from './components/WorldMap'
 import { useCurrentWeather } from './hooks/useCurrentWeather'
-import type { Coordinates } from './types/weather'
+import type { SelectedLocation } from './types/weather'
 
 const queryClient = new QueryClient()
 
 function WeatherExplorer() {
-  const [selected, setSelected] = useState<Coordinates | null>(null)
+  const [selected, setSelected] = useState<SelectedLocation | null>(null)
   const { data, isLoading, error } = useCurrentWeather(selected)
 
   return (
-    <main className="layout">
-      <WorldMap selected={selected} onSelect={setSelected} />
-      <WeatherPanel coordinates={selected} weather={data} isLoading={isLoading} error={error} />
-    </main>
+    <div className="page">
+      <header className="header">
+        <h1>Weather explorer</h1>
+        <p>Click on any location to view the weather. Click a city name to snap to it.</p>
+      </header>
+      <main className="layout">
+        <WorldMap selected={selected} onSelect={setSelected} />
+        <WeatherPanel coordinates={selected} weather={data} isLoading={isLoading} error={error} />
+      </main>
+    </div>
   )
 }
 

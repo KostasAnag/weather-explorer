@@ -3,10 +3,11 @@ import axios from 'axios'
 import App from './App'
 
 const handlers: Record<string, (e: unknown) => void> = {}
+let features: unknown[] = []
 vi.mock('maplibre-gl', () => ({
   ...{
     Map: vi.fn().mockImplementation(function () {
-      return { on: (t: string, fn: (e: unknown) => void) => (handlers[t] = fn), addControl: vi.fn(), remove: vi.fn() }
+      return { on: (t: string, fn: (e: unknown) => void) => (handlers[t] = fn), addControl: vi.fn(), queryRenderedFeatures: () => features, remove: vi.fn() }
     }),
     NavigationControl: vi.fn(),
     Marker: vi.fn().mockImplementation(function () {
@@ -30,16 +31,47 @@ describe('App: click map -> fetch -> display weather', () => {
         },
       },
     })
+    features = []
     render(<App />)
-    expect(screen.getByText(/click anywhere on the map/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
+    expect(screen.getByText(/click on any location to view the weather/i)).toBeInTheDocument()
+    expect(screen.getByText(/select a location/i)).toBeInTheDocument()
 
-    handlers.click({ lngLat: { lng: 2.3522, lat: 48.8566 } })
+    handlers.click({ lngLat: { lng: 2.3522, lat: 48.8566 }, point: { x: 1, y: 1 } })
 
     expect(await screen.findByText('Moderate rain')).toBeInTheDocument()
     expect(screen.getByText('9.5 °C')).toBeInTheDocument()
     expect(vi.mocked(axios.get).mock.calls[0][1]?.params as object).toMatchObject({
       latitude: 48.8566,
       longitude: 2.3522,
+    })
+  })
+
+  it('shows the city name when a city is clicked', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: {
+        latitude: 41.9, longitude: 12.5,
+        current: {
+          time: 't', temperature_2m: 15, apparent_temperature: 14,
+          relative_humidity_2m: 60, precipitation: 0, weather_code: 0,
+          cloud_cover: 0, pressure_msl: 1010, wind_speed_10m: 5,
+          wind_direction_10m: 10, is_day: 1,
+        },
+      },
+    })
+    features = [{
+      sourceLayer: 'place',
+      properties: { name: 'Rome', class: 'city' },
+      geometry: { type: 'Point', coordinates: [12.4964, 41.9028] },
+    }]
+    render(<App />)
+
+    handlers.click({ lngLat: { lng: 12.5, lat: 41.9 }, point: { x: 1, y: 1 } })
+
+    expect(await screen.findByRole('heading', { name: 'Rome' })).toBeInTheDocument()
+    expect(vi.mocked(axios.get).mock.calls.at(-1)?.[1]?.params as object).toMatchObject({
+      latitude: 41.9028,
+      longitude: 12.4964,
     })
   })
 })

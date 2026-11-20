@@ -38,3 +38,8 @@ export interface CurrentWeather {
   windDirection: number
   isDay: boolean
 }
+
+/** A location the user picked on the map. `name` is only set for clicked cities. */
+export interface SelectedLocation extends Coordinates {
+  name?: string
+}
