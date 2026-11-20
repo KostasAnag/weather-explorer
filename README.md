@@ -25,6 +25,90 @@ temperature on every saved place and the current selection), and route-level **c
 only geocoding is *forward* (typed city name to coordinates) for the search box. Your geolocation
 position is never turned into a place name.
 
+## How to use the app
+
+The app has two pages, switched with the **Map** and **Compare** links at the top right. Weather is
+shown in metric units (°C, km/h, mm, hPa). On a phone the layout stacks: the map comes first, the
+panels below it.
+
+### Get the weather for a place
+
+There are three ways to pick a place on the **Map** page. Whichever you use, the right-hand column
+then shows its weather and forecast, and a blue badge marks it on the map.
+
+- **Click anywhere on the map.** The weather for the exact spot you clicked appears, headed by its
+  coordinates.
+- **Click a city name on the map.** Clicking a city, town or village *label* snaps to that place's
+  exact point and shows its name (for example "Paris"). At world zoom only countries are labelled,
+  so zoom in (scroll wheel, double-click or the **+** button) to reveal cities.
+- **Search by name.** Type at least 2 characters in **Search for a city…**. Suggestions appear after a
+  short pause, with region and country to tell same-named cities apart ("Athens, Attica, Greece" vs
+  "Athens, Georgia, United States"). Pick one with the mouse, or use the keyboard:
+  <kbd>↓</kbd> / <kbd>↑</kbd> to move, <kbd>Enter</kbd> to choose, <kbd>Esc</kbd> to close. The map
+  flies to the city and the weather loads.
+
+### Read the weather
+
+- **Current weather:** conditions, temperature, "Feels like", and tiles for humidity, wind,
+  precipitation, cloud cover and pressure.
+- **Next 24 hours:** a scrollable strip starting at the current hour, with temperature and chance of
+  rain for each hour. Times are the *place's* local time.
+- **7-day forecast:** one row per day with conditions, chance of rain and the day's minimum and
+  maximum temperature.
+
+While data loads you see "Loading weather…" and "Loading forecast…" messages. If a request fails the
+panel says so ("Could not load weather. Please try another spot."); pick another spot, or reload the
+page, to try again.
+
+### Use your own location
+
+Press **Zoom to my location** (top right). Your browser asks for permission once; after you allow it,
+the map flies to you and the panel shows the weather for your exact coordinates, labelled
+**"My location"**. If you deny it, a red message explains how to allow it in your browser settings,
+and everything else keeps working.
+
+### Save places and come back to them
+
+- Press **Save location** in the weather panel. The button becomes a disabled **Saved ✓**, so the
+  same place cannot be saved twice.
+- Saved places appear as chips in the **Saved locations** card, and as **weather badges on the map**
+  (icon plus temperature, "…" while loading). They are kept in your browser, so they are still there
+  after a reload.
+- **Revisit:** click a chip, or click its badge on the map. The map flies there and the weather is
+  always re-fetched, so you never see stale numbers.
+- **Remove:** press the **×** on a chip.
+- Only the *place* is stored (name and coordinates), never the weather. Places picked by clicking an
+  empty spot have no name, so their chip shows the coordinates.
+
+### Compare places
+
+1. **Save at least 2 places** on the Map page (the Saved locations card reminds you how many more are
+   needed).
+2. Open **Compare**. Tick **2 to 5** of your saved places; once 5 are ticked the rest are disabled.
+3. You get:
+   - a **table** with conditions, temperature, feels-like, humidity, wind, precipitation, cloud cover
+     and pressure for each place (it scrolls sideways on narrow screens);
+   - a **line chart** of temperature over the next 24 hours, aligned by "hours from now" so places
+     in different time zones are comparable;
+   - a **bar chart** of each day's high for the next 7 days.
+4. Each place keeps the same colour in the table, the lines and the bars. Under each chart, **View data
+   as table** shows the same numbers in text form.
+5. Your selection is stored in the page address (`/compare?loc=...`), so you can refresh the page or
+   share the link and get the same comparison, as long as those places are saved in that browser.
+
+Note: the Map page's current selection is not remembered when you switch to Compare and back (your
+saved places are).
+
+### Troubleshooting
+
+| Problem | What to do |
+|---|---|
+| "Location permission was denied" | Allow location for the site in your browser's address-bar or site settings, then press the button again. It needs HTTPS or `localhost`. |
+| Map is blank, or labels are missing | The first load can take several seconds in development. Check your internet connection. If it never fills in, restart `npm run dev` and hard reload (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>); see [Additional notes](#5-additional-notes). |
+| "No places found" in search | Check the spelling, or try a larger nearby city. At least 2 characters are needed. |
+| "Could not load weather" | Usually a network hiccup or the free weather service being busy. Pick another spot, or reload the page, to try again. |
+| Compare page asks for more places | It needs at least 2 saved places. Go to **Map** and save more. |
+
 ---
 
 ## 1. Installation and setup
