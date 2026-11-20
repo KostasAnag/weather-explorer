@@ -1,3 +1,4 @@
+import { MIN_COMPARE } from '../lib/compareData'
 import { locationLabel } from '../lib/locations'
 import type { SavedLocation } from '../types/weather'
 
@@ -14,6 +15,7 @@ export function SavedLocationsList({
   onSelect,
   onRemove,
 }: SavedLocationsListProps) {
+  const missing = MIN_COMPARE - locations.length
   return (
     <section className="saved">
       <h2>Saved locations</h2>
@@ -42,6 +44,13 @@ export function SavedLocationsList({
             </li>
           ))}
         </ul>
+      )}
+      {missing > 0 && (
+        <p className="hint">
+          {missing === MIN_COMPARE
+            ? `Save at least ${MIN_COMPARE} locations to compare them.`
+            : `Save ${missing} more location${missing === 1 ? '' : 's'} to compare them.`}
+        </p>
       )}
     </section>
   )

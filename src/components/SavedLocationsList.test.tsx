@@ -15,6 +15,21 @@ describe('SavedLocationsList', () => {
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })
 
+  it('tells the user they need 2 saved locations to compare, when none are saved', () => {
+    render(<SavedLocationsList locations={[]} onSelect={vi.fn()} onRemove={vi.fn()} />)
+    expect(screen.getByText(/save at least 2 locations to compare/i)).toBeInTheDocument()
+  })
+
+  it('asks for exactly one more when one location is saved', () => {
+    render(<SavedLocationsList locations={[locations[0]]} onSelect={vi.fn()} onRemove={vi.fn()} />)
+    expect(screen.getByText(/save 1 more location to compare/i)).toBeInTheDocument()
+  })
+
+  it('drops the hint once 2 locations are saved', () => {
+    render(<SavedLocationsList locations={locations} onSelect={vi.fn()} onRemove={vi.fn()} />)
+    expect(screen.queryByText(/to compare/i)).not.toBeInTheDocument()
+  })
+
   it('lists names, falling back to coordinates for unnamed places', () => {
     render(<SavedLocationsList locations={locations} onSelect={vi.fn()} onRemove={vi.fn()} />)
     const items = within(screen.getByRole('list', { name: /saved locations/i })).getAllByRole('listitem')
