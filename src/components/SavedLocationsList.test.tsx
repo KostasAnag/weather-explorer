@@ -23,6 +23,22 @@ describe('SavedLocationsList', () => {
     expect(items[1]).toHaveTextContent('10, 20')
   })
 
+  it('shows coordinates only for "My location" entries', () => {
+    const mine: SavedLocation = { id: '48.8566,2.3522', name: 'My location', latitude: 48.8566, longitude: 2.3522 }
+    render(<SavedLocationsList locations={[locations[0], mine, locations[1]]} onSelect={vi.fn()} onRemove={vi.fn()} />)
+    const [rome, myLocation, unnamed] = screen.getAllByRole('listitem')
+    expect(rome).not.toHaveTextContent('41.9028')
+    expect(myLocation).toHaveTextContent('My location')
+    expect(myLocation).toHaveTextContent('48.8566, 2.3522')
+    expect(unnamed.textContent?.match(/10, 20/g)).toHaveLength(1) // not repeated
+  })
+
+  it('keeps the button name to the label only', () => {
+    const mine: SavedLocation = { id: '1,2', name: 'My location', latitude: 1, longitude: 2 }
+    render(<SavedLocationsList locations={[mine]} onSelect={vi.fn()} onRemove={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'My location' })).toBeInTheDocument()
+  })
+
   it('selects a location when its name is clicked', async () => {
     const onSelect = vi.fn()
     render(<SavedLocationsList locations={locations} onSelect={onSelect} onRemove={vi.fn()} />)

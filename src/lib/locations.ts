@@ -1,6 +1,9 @@
 import type { PlaceSuggestion, SavedLocation, SelectedLocation } from '../types/weather'
 import { round4 } from './coordinates'
 
+/** Label for the user's own geolocated position. */
+export const MY_LOCATION_NAME = 'My location'
+
 /** Same rounded coordinates = same place, which is how duplicates are detected. */
 export function locationId({ latitude, longitude }: SelectedLocation): string {
   return `${round4(latitude)},${round4(longitude)}`
