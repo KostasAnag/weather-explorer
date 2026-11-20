@@ -35,7 +35,7 @@ Tests live next to the code: `Foo.tsx` ↔ `Foo.test.tsx`.
 
 ## Rules
 - Weather requests use latitude/longitude only. **No reverse geocoding** (coordinates -> name). Forward geocoding (typed name -> coordinates, city search) is allowed and lives in `services/geocodingService.ts`.
-- Geolocation (later) only centers/zooms the map.
+- Geolocation ("Zoom to my location") selects the user's exact coordinates, labelled "My location", flies the map there and shows weather. Never look up a nearby/nearest city name for it.
 - Persist locations only (never weather data); fetch fresh weather on selection; no duplicate saved locations.
 - Every data view handles loading, error and empty states.
 - Mock at boundaries: `axios` in service tests, services in hook tests, `maplibre-gl` in component tests (jsdom has no WebGL). No real network in tests.
