@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { ForecastPanel } from './components/ForecastPanel'
 import { LocateButton } from './components/LocateButton'
 import { SaveLocationButton } from './components/SaveLocationButton'
@@ -23,7 +23,12 @@ export default function App() {
 
   const weather = useCurrentWeather(selected)
   const forecast = useForecast(selected)
-  const geolocation = useGeolocation(setFocus)
+  // The user's own position: select the exact coordinates (no name lookup) and fly there.
+  const handlePosition = useCallback((position: Coordinates) => {
+    setSelected({ name: 'My location', ...position })
+    setFocus(position)
+  }, [])
+  const geolocation = useGeolocation(handlePosition)
   const saved = useSavedLocations()
 
   function revisit(location: SavedLocation) {

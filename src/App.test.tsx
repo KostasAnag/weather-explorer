@@ -115,9 +115,10 @@ describe('App: click map -> fetch -> display weather', () => {
     })
   })
 
-  it('centers the map on the user without selecting a location or fetching weather', async () => {
-    vi.mocked(axios.get).mockClear()
+  it('selects the exact user position: flies there and shows its weather (no name lookup)', async () => {
+    vi.mocked(axios.get).mockReset()
     flyTo.mockClear()
+    fakeApi(18, 0)
     features = []
     vi.stubGlobal('navigator', {
       geolocation: {
@@ -130,8 +131,18 @@ describe('App: click map -> fetch -> display weather', () => {
     await userEvent.click(screen.getByRole('button', { name: /zoom to my location/i }))
 
     expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [-0.1278, 51.5074] }))
-    expect(axios.get).not.toHaveBeenCalled()
-    expect(screen.getByText(/select a location/i)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'My location' })).toBeInTheDocument()
+    expect(screen.getByText('51.5074, -0.1278')).toBeInTheDocument()
+    expect(await screen.findByText('18 °C')).toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: /7-day forecast/i })).toBeInTheDocument()
+
+    // Only forecast requests, by exact coordinates: no geocoding of any kind.
+    const calls = vi.mocked(axios.get).mock.calls
+    expect(calls.length).toBeGreaterThan(0)
+    for (const [url, config] of calls) {
+      expect(String(url)).toBe('https://api.open-meteo.com/v1/forecast')
+      expect(config?.params).toMatchObject({ latitude: 51.5074, longitude: -0.1278 })
+    }
     vi.unstubAllGlobals()
   })
 })
