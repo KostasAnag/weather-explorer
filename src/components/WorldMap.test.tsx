@@ -7,6 +7,10 @@ const handlers: Record<string, (e: unknown) => void> = {}
 const remove = vi.fn()
 const queryRenderedFeatures = vi.fn()
 const flyTo = vi.fn()
+// WorldMap calls setWorkerUrl while it is being imported, before this file's own consts exist
+// (hence vi.hoisted). A plain array records the call: Vitest clears mock call history before
+// every test (clearMocks defaults to true), which would erase a vi.fn() spy's import-time call.
+const { workerUrls } = vi.hoisted(() => ({ workerUrls: [] as string[] }))
 
 interface FakeMarker {
   options: { element: HTMLElement; anchor?: string }
@@ -16,6 +20,7 @@ interface FakeMarker {
 const markers: FakeMarker[] = []
 
 vi.mock('maplibre-gl', () => ({
+  setWorkerUrl: (url: string) => workerUrls.push(url),
   Map: vi.fn().mockImplementation(function () {
     return {
       on: (type: string, fn: (e: unknown) => void) => {
@@ -52,6 +57,13 @@ const rome: MapBadge = {
 const athens: MapBadge = { id: 'athens', latitude: 37.98, longitude: 23.72, label: 'Athens', selected: true }
 
 describe('WorldMap', () => {
+  // Production builds do not copy MapLibre's web worker unless it is imported explicitly:
+  // without this call the worker request falls through to index.html and the map has no labels.
+  it('registers the bundled worker file with MapLibre when the module loads', () => {
+    expect(workerUrls).toHaveLength(1)
+    expect(workerUrls[0]).toMatch(/maplibre-gl-worker.*\.mjs/)
+  })
+
   beforeEach(() => {
     queryRenderedFeatures.mockReset()
     flyTo.mockReset()

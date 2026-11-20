@@ -1,11 +1,17 @@
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// MapLibre builds its worker URL at runtime, which bundlers cannot see, so the worker file
+// would be missing from the production build. Importing it as an asset URL makes Vite copy it
+// to dist/, and setWorkerUrl tells MapLibre where it ended up.
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useRef } from 'react'
 import { normalizeLngLat } from '../lib/coordinates'
 import { findPlace, type MapFeatureLike } from '../lib/places'
 import { describeWeatherCode } from '../lib/weatherCodes'
 import { weatherIcon } from '../lib/weatherIcons'
 import type { Coordinates, MapBadge, SelectedLocation } from '../types/weather'
+
+maplibregl.setWorkerUrl(workerUrl)
 
 interface WorldMapProps {
   /** Weather badges to draw: saved places and the current selection. */
