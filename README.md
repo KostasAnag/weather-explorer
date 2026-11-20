@@ -156,13 +156,6 @@ in a `.env.example`, and never commit `.env` (the project's `AGENTS.md` records 
 A change is considered done only when `npm test`, `npx tsc -b`, `npm run lint` and `npm run build`
 all pass.
 
-### Deployment
-
-`vercel.json` contains a rewrite so deep links such as `/compare` work on a static host (single-page
-app fallback). To deploy on Vercel: import the repository, keep the **Vite** preset
-(build command `npm run build`, output directory `dist`), and no environment variables are needed.
-*(Not deployed yet; see [Next steps](#4-next-steps).)*
-
 ---
 
 ## 2. Implementation choices
@@ -266,7 +259,7 @@ has **196 tests in 32 files**.
 
 With more time, roughly in priority order:
 
-1. **Ship it:** deploy to Vercel and add GitHub Actions (lint, type-check, test, build on every PR).
+1. **Continuous integration:** add GitHub Actions (lint, type-check, test, build on every pull request).
 2. **Visible data attribution:** show an Open-Meteo credit in the UI footer (CC BY 4.0).
 3. **End-to-end tests:** Playwright flows against mocked network responses, to cover what jsdom
    cannot (the real map and the charts).
