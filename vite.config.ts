@@ -5,6 +5,8 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // MapLibre loads a sibling worker file via a relative URL; pre-bundling breaks it.
+  optimizeDeps: { exclude: ['maplibre-gl'] },
   test: {
     environment: 'jsdom',
     globals: true,
