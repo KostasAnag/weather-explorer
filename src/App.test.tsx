@@ -42,7 +42,16 @@ const forecastBody = {
   },
 }
 function fakeApi(temp: number, code: number) {
-  vi.mocked(axios.get).mockImplementation(async (_url, config) => {
+  vi.mocked(axios.get).mockImplementation(async (url, config) => {
+    if (String(url).includes('geocoding')) {
+      return {
+        data: {
+          results: [
+            { id: 264371, name: 'Athens', latitude: 37.98376, longitude: 23.72784, admin1: 'Attica', country: 'Greece' },
+          ],
+        },
+      }
+    }
     const params = (config?.params ?? {}) as Record<string, unknown>
     return { data: params.current ? currentBody(temp, code) : forecastBody }
   })
@@ -72,7 +81,7 @@ describe('App: click map -> fetch -> display weather', () => {
     features = []
     renderApp()
     expect(screen.getByRole('heading', { level: 1, name: 'Weather explorer' })).toBeInTheDocument()
-    expect(screen.getByText(/click on any location to view the weather/i)).toBeInTheDocument()
+    expect(screen.getByText(/search for a city or click anywhere on the map/i)).toBeInTheDocument()
     expect(screen.getByText(/select a location/i)).toBeInTheDocument()
 
     handlers.click({ lngLat: { lng: 2.3522, lat: 48.8566 }, point: { x: 1, y: 1 } })
@@ -195,5 +204,38 @@ describe('App: saved locations', () => {
     expect(await screen.findByRole('heading', { name: 'Rome' })).toBeInTheDocument()
     // cached data is still "fresh" for minutes, yet revisiting must re-request it
     await waitFor(() => expect(romeCalls()).toBe(4))
+  })
+})
+
+describe('App: search by city name', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset()
+    flyTo.mockClear()
+    fakeApi(21, 0)
+  })
+
+  it('autocompletes a city, then shows its weather, forecast and flies the map there', async () => {
+    renderApp()
+
+    await userEvent.type(screen.getByRole('combobox', { name: /search for a city/i }), 'Ath')
+    await userEvent.click(await screen.findByRole('option', { name: 'Athens, Attica, Greece' }))
+
+    expect(await screen.findByRole('heading', { name: 'Athens' })).toBeInTheDocument()
+    expect(await screen.findByText('21 °C')).toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: /7-day forecast/i })).toBeInTheDocument()
+    expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [23.7278, 37.9838] }))
+
+    const weatherCall = vi.mocked(axios.get).mock.calls.find(([, c]) => (c?.params as { current?: string })?.current)
+    expect(weatherCall?.[1]?.params).toMatchObject({ latitude: 37.9838, longitude: 23.7278 })
+  })
+
+  it('lets the user save a searched city', async () => {
+    renderApp()
+    await userEvent.type(screen.getByRole('combobox', { name: /search for a city/i }), 'Ath')
+    await userEvent.click(await screen.findByRole('option', { name: 'Athens, Attica, Greece' }))
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Save location' }))
+
+    expect(screen.getByRole('list', { name: /saved locations/i })).toHaveTextContent('Athens')
   })
 })

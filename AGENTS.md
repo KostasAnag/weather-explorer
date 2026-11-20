@@ -34,7 +34,7 @@ src/test/        Test setup
 Tests live next to the code: `Foo.tsx` ↔ `Foo.test.tsx`.
 
 ## Rules
-- Weather requests use latitude/longitude only. **No reverse geocoding.**
+- Weather requests use latitude/longitude only. **No reverse geocoding** (coordinates -> name). Forward geocoding (typed name -> coordinates, city search) is allowed and lives in `services/geocodingService.ts`.
 - Geolocation (later) only centers/zooms the map.
 - Persist locations only (never weather data); fetch fresh weather on selection; no duplicate saved locations.
 - Every data view handles loading, error and empty states.

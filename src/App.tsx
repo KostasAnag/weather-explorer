@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ForecastPanel } from './components/ForecastPanel'
 import { LocateButton } from './components/LocateButton'
 import { SaveLocationButton } from './components/SaveLocationButton'
+import { SearchBox } from './components/SearchBox'
 import { SavedLocationsList } from './components/SavedLocationsList'
 import { WeatherPanel } from './components/WeatherPanel'
 import { WorldMap } from './components/WorldMap'
@@ -10,8 +11,9 @@ import { useCurrentWeather } from './hooks/useCurrentWeather'
 import { useForecast } from './hooks/useForecast'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useSavedLocations } from './hooks/useSavedLocations'
+import { round4 } from './lib/coordinates'
 import { locationId } from './lib/locations'
-import type { Coordinates, SavedLocation, SelectedLocation } from './types/weather'
+import type { Coordinates, PlaceSuggestion, SavedLocation, SelectedLocation } from './types/weather'
 
 export default function App() {
   const queryClient = useQueryClient()
@@ -33,14 +35,26 @@ export default function App() {
     setFocus({ latitude: location.latitude, longitude: location.longitude })
   }
 
+  function selectPlace(place: PlaceSuggestion) {
+    const coordinates = { latitude: round4(place.latitude), longitude: round4(place.longitude) }
+    setSelected({ name: place.name, ...coordinates })
+    setFocus(coordinates)
+  }
+
   return (
     <div className="page">
       <header className="header">
         <div>
           <h1>Weather explorer</h1>
-          <p>Click on any location to view the weather. Click a city name to snap to it.</p>
+          <p>
+            Search for a city or click anywhere on the map to view the weather. Click a city name on
+            the map to snap to it.
+          </p>
         </div>
-        <LocateButton state={geolocation.state} onLocate={geolocation.locate} />
+        <div className="header-actions">
+          <SearchBox onSelect={selectPlace} />
+          <LocateButton state={geolocation.state} onLocate={geolocation.locate} />
+        </div>
       </header>
       <main className="layout">
         <WorldMap selected={selected} focus={focus} onSelect={setSelected} />

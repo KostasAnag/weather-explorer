@@ -2,7 +2,8 @@
 body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color: #0f172a; }
 .page { height: 95vh; display: flex; flex-direction: column; padding: 1rem 1rem 0; } /* leaves 5vh of the viewport free below */
 .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-.locate { text-align: right; }
+.locate { text-align: right; flex-shrink: 0; }
+.locate button { white-space: nowrap; }
 .locate button { padding: .5rem .9rem; border: 0; border-radius: .5rem; background: #2563eb; color: #fff; font: inherit; cursor: pointer; }
 .locate button:disabled { opacity: .6; cursor: progress; }
 .locate [role="alert"] { margin: .35rem 0 0; max-width: 18rem; font-size: .8rem; color: #b91c1c; }
@@ -53,3 +54,19 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f7; color
 .saved-remove { color: #64748b; padding: .3rem .55rem; }
 .save-btn { margin: 0 0 1rem; padding: .4rem .8rem; border: 0; border-radius: .5rem; background: #16a34a; color: #fff; font: inherit; cursor: pointer; }
 .save-btn:disabled { background: #94a3b8; cursor: default; }
+
+.header-actions { display: flex; align-items: flex-start; gap: .75rem; flex-shrink: 0; }
+.search { position: relative; }
+.search input { width: 14rem; padding: .5rem .7rem; border: 1px solid #cbd5e1; border-radius: .5rem; font: inherit; background: #fff; }
+.search-dropdown { position: absolute; top: calc(100% + .25rem); left: 0; min-width: 100%; width: 20rem; max-width: 80vw; z-index: 1000; background: #fff; border-radius: .5rem; box-shadow: 0 4px 14px rgb(0 0 0 / .2); overflow: hidden; }
+.search-dropdown p { margin: 0; padding: .6rem .8rem; font-size: .85rem; color: #475569; }
+.search-dropdown [role="alert"] { color: #b91c1c; }
+.search-dropdown ul { list-style: none; margin: 0; padding: 0; }
+.search-dropdown li { padding: .55rem .8rem; font-size: .9rem; cursor: pointer; }
+.search-dropdown li:hover, .search-dropdown li[aria-selected="true"] { background: #dbeafe; }
+@media (max-width: 760px) {
+  .header { flex-direction: column; }
+  .header-actions { flex-wrap: wrap; }
+  .search input { width: 100%; }
+  .search { flex: 1 1 100%; }
+}
