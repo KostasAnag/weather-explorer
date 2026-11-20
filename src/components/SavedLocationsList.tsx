@@ -31,6 +31,11 @@ export function SavedLocationsList({
               >
                 {locationLabel(loc)}
               </button>
+              {loc.name && (
+                <span className="saved-coords">
+                  {loc.latitude}, {loc.longitude}
+                </span>
+              )}
               <button
                 type="button"
                 className="saved-remove"
