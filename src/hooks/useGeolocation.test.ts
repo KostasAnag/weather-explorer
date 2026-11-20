@@ -69,4 +69,13 @@ describe('useGeolocation', () => {
     act(() => (getCurrentPosition.mock.calls[1][0] as Success)(position(1, 2)))
     expect(result.current.state).not.toBe(first)
   })
+
+  it('notifies an onSuccess callback with the coordinates', () => {
+    stubGeolocation()
+    const onSuccess = vi.fn()
+    const { result } = renderHook(() => useGeolocation(onSuccess))
+    act(() => result.current.locate())
+    act(() => (getCurrentPosition.mock.calls[0][0] as Success)(position(1.23456, 2.34567)))
+    expect(onSuccess).toHaveBeenCalledWith({ latitude: 1.2346, longitude: 2.3457 })
+  })
 })

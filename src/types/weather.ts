@@ -88,3 +88,9 @@ export interface Forecast {
   hourly: HourlyForecastPoint[]
   daily: DailyForecastDay[]
 }
+
+/** What we persist: the place only. Weather is always fetched fresh. */
+export interface SavedLocation extends Coordinates {
+  id: string
+  name?: string
+}

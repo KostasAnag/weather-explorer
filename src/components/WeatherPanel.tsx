@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { describeWeatherCode } from '../lib/weatherCodes'
 import type { CurrentWeather, SelectedLocation } from '../types/weather'
 
@@ -6,6 +7,8 @@ interface WeatherPanelProps {
   weather?: CurrentWeather
   isLoading?: boolean
   error?: Error | null
+  /** Extra content shown for a selected location (e.g. a save button). */
+  children?: ReactNode
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
@@ -17,7 +20,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function WeatherPanel({ coordinates, weather, isLoading, error }: WeatherPanelProps) {
+export function WeatherPanel({ coordinates, weather, isLoading, error, children }: WeatherPanelProps) {
   if (!coordinates) {
     return (
       <aside className="panel">
@@ -31,6 +34,7 @@ export function WeatherPanel({ coordinates, weather, isLoading, error }: Weather
       <p className="coords">
         {coordinates.latitude}, {coordinates.longitude}
       </p>
+      {children}
       {isLoading && <p role="status">Loading weather…</p>}
       {error && <p role="alert">Could not load weather. Please try another spot.</p>}
       {weather && (
